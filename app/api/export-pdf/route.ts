@@ -1,33 +1,37 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { htmlToPdfBuffer } from '@/lib/pdf';
+import { NextRequest } from "next/server";
+import puppeteer from "puppeteer";
 
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
-    const { improvedResume } = (await request.json()) as { improvedResume?: string };
+    const { html } = await req.json();
 
-    if (!improvedResume?.trim()) {
-      return NextResponse.json({ error: 'improvedResume is required' }, { status: 400 });
+    if (!html) {
+      return new Response("Missing HTML", { status: 400 });
     }
 
-    const html = `
-      <html>
-      <body style="font-family: Arial; white-space: pre-wrap; line-height: 1.5;">
-        <h1>Optimized Resume</h1>
-        <hr/>
-        <div>${improvedResume.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
-      </body>
-      </html>
-    `;
+    const browser = await puppeteer.launch({
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    });
 
-    const pdfBuffer = await htmlToPdfBuffer(html);
-    return new NextResponse(pdfBuffer, {
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: "networkidle0" });
+
+    const pdfBuffer = await page.pdf({
+      format: "A4",
+      printBackground: true,
+    });
+
+    await browser.close();
+
+    return new Response(pdfBuffer, {
       status: 200,
       headers: {
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': 'attachment; filename="optimized-resume.pdf"'
-      }
+        "Content-Type": "application/pdf",
+        "Content-Disposition": "attachment; filename=resume.pdf",
+      },
     });
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'PDF export failed' }, { status: 500 });
+    console.error(error);
+    return new Response("Failed to generate PDF", { status: 500 });
   }
 }
