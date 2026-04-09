@@ -1,3 +1,5 @@
+export const runtime = "nodejs";
+
 import { NextRequest } from "next/server";
 import puppeteer from "puppeteer";
 
@@ -23,7 +25,7 @@ export async function POST(req: NextRequest) {
 
     await browser.close();
 
-    return new Response(pdfBuffer, {
+    return new Response(Buffer.from(pdfBuffer), {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",
