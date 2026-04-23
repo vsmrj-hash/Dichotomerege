@@ -1,112 +1,41 @@
-# AI Resume Optimizer (MVP)
+# Night Shift — Sleep Rescue MVP
 
-Production-ready MVP built with Next.js App Router, Tailwind, OpenAI, Tesseract OCR, and Puppeteer PDF export.
+Night Shift is a mobile-first sleep rescue app with a dark, low-stimulation interface and deterministic intervention routing.
 
-## Features
+## Implemented Stack (React)
+- Next.js 14 App Router
+- TypeScript + Tailwind CSS
+- Client-side state mapping MCQ input -> intervention cards
 
-- Paste resume text or upload image screenshot for OCR extraction
-- Paste job description and run analysis
-- Structured resume parser output (`name`, `experience`, `bullets`, `skills`)
-- Bullet enhancement (action + impact + metrics, with estimated metric labeling)
-- JD rewrite mode
-- Deterministic scoring engine:
-  - keyword match %
-  - missing skills
-  - weak bullet detection
-  - gap highlights
-- Side-by-side original vs improved output
-- PDF export
-- Loading states + input validation + API error handling
-- Sample test data + deterministic unit tests
+## Product Flow
+1. Entry: “I can’t sleep.”
+2. Duration MCQ (`<20m`, `20-60m`, `1h+`)
+3. Symptom multi-select
+4. Payment gateway step (UPI or PayPal)
+5. Dynamic interventions:
+   - Cognitive Shuffler (Loud Thoughts)
+   - 4-7-8 Breathing (Racing Heart)
+   - Left-Side Protocol (Acidity/Heartburn)
+   - Body Downshift (Physical Restlessness)
+   - SOS Reset (20m+ awake)
+6. Pro-Tips settings/checklist page
 
-## Tech Stack
-
-- **Frontend:** Next.js App Router + TailwindCSS
-- **Backend:** Next.js API routes
-- **AI:** OpenAI API (`openai` SDK)
-- **OCR:** `tesseract.js`
-- **PDF:** `puppeteer`
-- **Tests:** Vitest
-
-## Folder Structure
-
+## React Code Structure
 ```text
-.
-├── app
-│   ├── api
-│   │   ├── analyze/route.ts
-│   │   ├── optimize/route.ts
-│   │   └── export-pdf/route.ts
-│   ├── results/page.tsx
-│   ├── globals.css
-│   ├── layout.tsx
-│   └── page.tsx
-├── components
-│   ├── ComparisonPanel.tsx
-│   └── ScoreCard.tsx
-├── lib
-│   ├── __tests__/scoring.test.ts
-│   ├── ocr.ts
-│   ├── openai.ts
-│   ├── optimizer.ts
-│   ├── pdf.ts
-│   ├── resume-parser.ts
-│   ├── sample-data.ts
-│   ├── scoring.ts
-│   ├── types.ts
-│   └── utils.ts
-├── public/sample-data
-│   ├── jd.txt
-│   └── resume.txt
-├── .env.example
-├── package.json
-├── postcss.config.mjs
-├── tailwind.config.ts
-├── tsconfig.json
-└── vitest.config.ts
+app/
+├── globals.css
+├── layout.tsx
+└── page.tsx
+
+docs/
+└── PRD-night-shift.md
 ```
 
-## Setup
+## Flutter Reference Structure
+See `docs/PRD-night-shift.md` for the complete Flutter parity architecture.
 
-1. Install dependencies:
-   ```bash
-   npm install
-   ```
-2. Configure environment:
-   ```bash
-   cp .env.example .env.local
-   ```
-   Add your OpenAI key in `.env.local`.
-3. Start development server:
-   ```bash
-   npm run dev
-   ```
-4. Open:
-   - Home: `http://localhost:3000`
-   - Results: generated after analysis.
-
-## API Endpoints
-
-- `POST /api/analyze` 
-  - Input: `{ resumeText?, jdText, imageBase64? }`
-  - Runs OCR (when needed), parsing, deterministic scoring, and bullet optimization.
-- `POST /api/optimize`
-  - Input: `{ action: 'fix-bullets' | 'rewrite-jd', resumeText, jdText? }`
-- `POST /api/export-pdf`
-  - Input: `{ improvedResume }`
-  - Returns downloadable PDF.
-
-## Notes & Constraints Enforcement
-
-- No fabricated employers, roles, or timelines in AI prompts.
-- Any added metrics must be explicitly marked `estimated`.
-- Edits are reversible via side-by-side original content retention.
-- If AI call fails or times out, backend falls back to deterministic bullet formatting.
-
-## Testing
-
+## Run
 ```bash
-npm run test
-npm run typecheck
-npm run lint
+npm install
+npm run dev
 ```
