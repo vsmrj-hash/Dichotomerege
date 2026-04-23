@@ -21,8 +21,9 @@ Night Shift is a mobile-first sleep rescue app that gives immediate, evidence-al
 1. Entry screen: “I can’t sleep.”
 2. MCQ #1: “How long have you been trying?” (<20m, 20–60m, 1h+)
 3. MCQ #2: “What is the friction?” (multi-select)
-4. Dynamic intervention cards appear immediately based on state map.
-5. User can switch to Pro-Tips tab for habit-level prevention settings.
+4. Payment gateway step appears before any intervention content is revealed.
+5. After successful payment, dynamic intervention cards appear based on state map.
+6. User can switch to Pro-Tips tab for habit-level prevention settings.
 
 ## 4) Decision Engine Mapping
 
@@ -30,7 +31,7 @@ Night Shift is a mobile-first sleep rescue app that gives immediate, evidence-al
 - `duration`: `lt20 | 20to60 | gt60`
 - `symptoms[]`: `loud-thoughts | racing-heart | acidity-heartburn | physical-restlessness`
 
-### Outputs
+### Outputs (after payment confirmation)
 - Loud Thoughts → Cognitive Shuffler
 - Racing Heart → 4-7-8 Breathing
 - Acidity/Heartburn → Left-Side Protocol
@@ -38,6 +39,8 @@ Night Shift is a mobile-first sleep rescue app that gives immediate, evidence-al
 - Duration >= 20m → SOS Reset
 
 ## 5) Functional Requirements
+- Payment step supports UPI and PayPal options before showing interventions.
+- Client-side validation for UPI ID / PayPal email in MVP.
 - Multi-select symptom handling.
 - Deterministic mapping (no probabilistic recommendations).
 - Breathing module includes animated visual pacing cue.

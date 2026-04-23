@@ -11,13 +11,14 @@ Night Shift is a mobile-first sleep rescue app with a dark, low-stimulation inte
 1. Entry: “I can’t sleep.”
 2. Duration MCQ (`<20m`, `20-60m`, `1h+`)
 3. Symptom multi-select
-4. Dynamic interventions:
+4. Payment gateway step (UPI or PayPal)
+5. Dynamic interventions:
    - Cognitive Shuffler (Loud Thoughts)
    - 4-7-8 Breathing (Racing Heart)
    - Left-Side Protocol (Acidity/Heartburn)
    - Body Downshift (Physical Restlessness)
    - SOS Reset (20m+ awake)
-5. Pro-Tips settings/checklist page
+6. Pro-Tips settings/checklist page
 
 ## React Code Structure
 ```text

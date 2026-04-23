@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, useMemo, useState } from 'react';
+import { ReactNode, useEffect, useMemo, useState } from 'react';
 
 type Duration = 'lt20' | '20to60' | 'gt60';
 type Symptom =
@@ -8,6 +8,8 @@ type Symptom =
   | 'racing-heart'
   | 'acidity-heartburn'
   | 'physical-restlessness';
+
+type PaymentMethod = 'upi' | 'paypal';
 
 const durationOptions: Array<{ id: Duration; label: string; helper: string }> = [
   { id: 'lt20', label: '< 20 minutes', helper: 'Early intervention window.' },
@@ -55,6 +57,11 @@ export default function Page() {
   const [tab, setTab] = useState<'rescue' | 'pro-tips'>('rescue');
   const [duration, setDuration] = useState<Duration | null>(null);
   const [selectedSymptoms, setSelectedSymptoms] = useState<Symptom[]>([]);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
+  const [upiId, setUpiId] = useState('');
+  const [paypalEmail, setPaypalEmail] = useState('');
+  const [paymentUnlocked, setPaymentUnlocked] = useState(false);
+  const [paymentError, setPaymentError] = useState('');
 
   const showSosReset = duration === '20to60' || duration === 'gt60';
 
@@ -76,6 +83,37 @@ export default function Page() {
   };
 
   const canRenderInterventions = duration !== null && selectedSymptoms.length > 0;
+
+  useEffect(() => {
+    setPaymentUnlocked(false);
+    setPaymentError('');
+  }, [duration, selectedSymptoms]);
+
+  const unlockSolutions = () => {
+    if (!paymentMethod) {
+      setPaymentError('Select a payment method to continue.');
+      return;
+    }
+
+    if (paymentMethod === 'upi') {
+      const isValidUpi = /.+@.+/.test(upiId.trim());
+      if (!isValidUpi) {
+        setPaymentError('Enter a valid UPI ID (example: name@bank).');
+        return;
+      }
+    }
+
+    if (paymentMethod === 'paypal') {
+      const isValidEmail = /\S+@\S+\.\S+/.test(paypalEmail.trim());
+      if (!isValidEmail) {
+        setPaymentError('Enter a valid PayPal email.');
+        return;
+      }
+    }
+
+    setPaymentError('');
+    setPaymentUnlocked(true);
+  };
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-4 px-4 py-6 sm:px-6">
@@ -160,61 +198,141 @@ export default function Page() {
 
           {canRenderInterventions && (
             <article className="space-y-3 rounded-2xl border border-slate-800 bg-slate-900 p-5">
-              <h2 className="text-lg font-semibold text-white">3) Night Shift response</h2>
-
-              {interventions.loudThoughts && (
-                <Card title="A) Cognitive Shuffler" accent="teal">
+              {!paymentUnlocked ? (
+                <>
+                  <h2 className="text-lg font-semibold text-white">3) Unlock your rescue plan</h2>
                   <p className="text-sm text-slate-300">
-                    Read each noun slowly in your mind, 1 word per breath. No storyline.
+                    Payment gateway step (UPI / PayPal) before solutions are shown.
                   </p>
-                  <p className="mt-3 rounded-lg bg-slate-950 p-3 text-sm text-slate-200">
-                    {shuffleWords.join(' • ')}
-                  </p>
-                </Card>
-              )}
 
-              {interventions.racingHeart && (
-                <Card title="B) 4-7-8 Breathing" accent="orange">
-                  <p className="text-sm text-slate-300">
-                    Inhale 4s • Hold 7s • Exhale 8s. Follow the circle for rhythm.
-                  </p>
-                  <div className="mt-4 flex items-center justify-center py-4">
-                    <div className="breathe-circle flex h-28 w-28 items-center justify-center rounded-full bg-orange-400/25 ring-2 ring-orange-300/70">
-                      <span className="text-xs font-semibold uppercase tracking-widest text-orange-200">
-                        4-7-8
-                      </span>
-                    </div>
+                  <div className="grid gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod('upi')}
+                      className={`rounded-xl border px-4 py-3 text-left transition ${
+                        paymentMethod === 'upi'
+                          ? 'border-teal-400 bg-teal-400/10'
+                          : 'border-slate-700 hover:border-teal-300/60 hover:bg-slate-800'
+                      }`}
+                    >
+                      <p className="font-medium text-white">UPI</p>
+                      <p className="text-xs text-slate-400">Fast mobile payment using UPI ID.</p>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod('paypal')}
+                      className={`rounded-xl border px-4 py-3 text-left transition ${
+                        paymentMethod === 'paypal'
+                          ? 'border-orange-400 bg-orange-400/10'
+                          : 'border-slate-700 hover:border-orange-300/60 hover:bg-slate-800'
+                      }`}
+                    >
+                      <p className="font-medium text-white">PayPal</p>
+                      <p className="text-xs text-slate-400">Pay with PayPal wallet or card.</p>
+                    </button>
                   </div>
-                </Card>
-              )}
 
-              {interventions.acidity && (
-                <Card title="C) Left-Side Protocol" accent="teal">
-                  <ul className="list-inside list-disc space-y-1 text-sm text-slate-300">
-                    <li>Move to left-side sleeping position now.</li>
-                    <li>Raise head-of-bed by ~6 inches if available.</li>
-                    <li>Keep neck neutral; avoid flat-back posture.</li>
-                  </ul>
-                </Card>
-              )}
+                  {paymentMethod === 'upi' && (
+                    <label className="block text-sm text-slate-200">
+                      UPI ID
+                      <input
+                        value={upiId}
+                        onChange={(event) => setUpiId(event.target.value)}
+                        placeholder="name@bank"
+                        className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:border-teal-400 focus:outline-none"
+                      />
+                    </label>
+                  )}
 
-              {interventions.restlessness && (
-                <Card title="D) Body Downshift" accent="orange">
-                  <ul className="list-inside list-disc space-y-1 text-sm text-slate-300">
-                    <li>Tense toes-to-calves for 5s, release 10s.</li>
-                    <li>Repeat up body segments for 2 full rounds.</li>
-                    <li>End with jaw unclench + shoulder drop.</li>
-                  </ul>
-                </Card>
-              )}
+                  {paymentMethod === 'paypal' && (
+                    <label className="block text-sm text-slate-200">
+                      PayPal email
+                      <input
+                        value={paypalEmail}
+                        onChange={(event) => setPaypalEmail(event.target.value)}
+                        placeholder="you@example.com"
+                        className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:border-orange-400 focus:outline-none"
+                      />
+                    </label>
+                  )}
 
-              {showSosReset && (
-                <Card title="E) SOS Reset" accent="teal">
-                  <p className="text-sm text-slate-300">
-                    If awake beyond 20 minutes, leave bed calmly. Sit in a dim room,
-                    no bright screens, and return only when drowsy.
+                  {paymentError && (
+                    <p className="rounded-lg border border-rose-400/60 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
+                      {paymentError}
+                    </p>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={unlockSolutions}
+                    className="rounded-xl bg-teal-500 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-teal-400"
+                  >
+                    Pay & Continue
+                  </button>
+                </>
+              ) : (
+                <>
+                  <h2 className="text-lg font-semibold text-white">4) Night Shift response</h2>
+                  <p className="text-xs uppercase tracking-wider text-emerald-300">
+                    Payment confirmed. Solutions unlocked.
                   </p>
-                </Card>
+
+                  {interventions.loudThoughts && (
+                    <Card title="A) Cognitive Shuffler" accent="teal">
+                      <p className="text-sm text-slate-300">
+                        Read each noun slowly in your mind, 1 word per breath. No storyline.
+                      </p>
+                      <p className="mt-3 rounded-lg bg-slate-950 p-3 text-sm text-slate-200">
+                        {shuffleWords.join(' • ')}
+                      </p>
+                    </Card>
+                  )}
+
+                  {interventions.racingHeart && (
+                    <Card title="B) 4-7-8 Breathing" accent="orange">
+                      <p className="text-sm text-slate-300">
+                        Inhale 4s • Hold 7s • Exhale 8s. Follow the circle for rhythm.
+                      </p>
+                      <div className="mt-4 flex items-center justify-center py-4">
+                        <div className="breathe-circle flex h-28 w-28 items-center justify-center rounded-full bg-orange-400/25 ring-2 ring-orange-300/70">
+                          <span className="text-xs font-semibold uppercase tracking-widest text-orange-200">
+                            4-7-8
+                          </span>
+                        </div>
+                      </div>
+                    </Card>
+                  )}
+
+                  {interventions.acidity && (
+                    <Card title="C) Left-Side Protocol" accent="teal">
+                      <ul className="list-inside list-disc space-y-1 text-sm text-slate-300">
+                        <li>Move to left-side sleeping position now.</li>
+                        <li>Raise head-of-bed by ~6 inches if available.</li>
+                        <li>Keep neck neutral; avoid flat-back posture.</li>
+                      </ul>
+                    </Card>
+                  )}
+
+                  {interventions.restlessness && (
+                    <Card title="D) Body Downshift" accent="orange">
+                      <ul className="list-inside list-disc space-y-1 text-sm text-slate-300">
+                        <li>Tense toes-to-calves for 5s, release 10s.</li>
+                        <li>Repeat up body segments for 2 full rounds.</li>
+                        <li>End with jaw unclench + shoulder drop.</li>
+                      </ul>
+                    </Card>
+                  )}
+
+                  {showSosReset && (
+                    <Card title="E) SOS Reset" accent="teal">
+                      <p className="text-sm text-slate-300">
+                        If awake beyond 20 minutes, leave bed calmly. Sit in a dim room,
+                        no bright screens, and return only when drowsy.
+                      </p>
+                    </Card>
+                  )}
+                </>
               )}
             </article>
           )}
