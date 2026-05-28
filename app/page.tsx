@@ -1,280 +1,280 @@
-"use client";
-
-import { useCallback, useMemo, useState } from "react";
-
-type CareerPath = {
-  name: string;
-  baselineGrowth: number;
-  automationRisk: number;
-  demandHotspots: string[];
-  salaryBand: [number, number];
-  coreSkills: string[];
-};
-
-type SkillCategory = {
-  name: string;
-  items: string[];
-};
-
-const careerPaths: CareerPath[] = [
-  { name: "AI Automation Specialist", baselineGrowth: 0.94, automationRisk: 0.18, demandHotspots: ["United States", "India", "Singapore", "United Arab Emirates"], salaryBand: [85000, 210000], coreSkills: ["AI Automation", "Workflow Automation", "No-Code Automation", "API Integration", "Prompt Engineering"] },
-  { name: "AI Generalist", baselineGrowth: 0.9, automationRisk: 0.22, demandHotspots: ["United States", "United Kingdom", "Canada", "Germany"], salaryBand: [75000, 190000], coreSkills: ["AI Tooling", "Prompt Engineering", "Data Literacy", "Product Strategy", "Technical Writing"] },
-  { name: "Software Engineer", baselineGrowth: 0.82, automationRisk: 0.35, demandHotspots: ["United States", "Germany", "India", "Singapore"], salaryBand: [70000, 180000], coreSkills: ["JavaScript", "Python", "System Design", "Cloud Computing", "Testing"] },
-  { name: "Data Analyst", baselineGrowth: 0.76, automationRisk: 0.45, demandHotspots: ["United Kingdom", "Canada", "India", "Australia"], salaryBand: [50000, 120000], coreSkills: ["SQL", "Data Visualization", "Excel", "Statistics", "Business Intelligence"] },
-  { name: "Nurse", baselineGrowth: 0.9, automationRisk: 0.1, demandHotspots: ["United States", "Japan", "United Arab Emirates", "Canada"], salaryBand: [45000, 110000], coreSkills: ["Patient Care", "Clinical Judgment", "Empathy", "Emergency Response", "Medication Administration"] },
-  { name: "Gym Trainer", baselineGrowth: 0.78, automationRisk: 0.16, demandHotspots: ["United States", "Australia", "United Arab Emirates", "United Kingdom"], salaryBand: [35000, 95000], coreSkills: ["Strength Training", "Nutrition Coaching", "Client Motivation", "Injury Prevention", "Sales"] },
-  { name: "Restaurant Manager", baselineGrowth: 0.74, automationRisk: 0.2, demandHotspots: ["United States", "France", "United Arab Emirates", "Singapore"], salaryBand: [42000, 95000], coreSkills: ["Hospitality Operations", "Inventory Management", "Team Scheduling", "Customer Service", "Food Safety"] },
-  { name: "SMMA CEO", baselineGrowth: 0.8, automationRisk: 0.38, demandHotspots: ["United States", "United Kingdom", "India", "United Arab Emirates"], salaryBand: [50000, 220000], coreSkills: ["Agency Operations", "Client Acquisition", "Paid Ads", "Content Strategy", "Sales"] },
-  { name: "Social Media Manager", baselineGrowth: 0.77, automationRisk: 0.42, demandHotspots: ["United States", "India", "Brazil", "United Kingdom"], salaryBand: [42000, 120000], coreSkills: ["Content Strategy", "Community Management", "Short-Form Video", "Analytics", "Copywriting"] },
-  { name: "Electrician", baselineGrowth: 0.85, automationRisk: 0.15, demandHotspots: ["United States", "Australia", "New Zealand", "Netherlands"], salaryBand: [50000, 100000], coreSkills: ["Electrical Systems", "Safety Compliance", "Troubleshooting", "Blueprint Reading", "Customer Service"] },
-  { name: "Teacher", baselineGrowth: 0.72, automationRisk: 0.2, demandHotspots: ["Finland", "Singapore", "United States", "Ireland"], salaryBand: [40000, 95000], coreSkills: ["Curriculum Design", "Public Speaking", "Mentoring", "Assessment", "Classroom Management"] },
-  { name: "UX Designer", baselineGrowth: 0.73, automationRisk: 0.4, demandHotspots: ["United States", "Sweden", "Germany", "South Korea"], salaryBand: [60000, 140000], coreSkills: ["User Research", "Figma", "Wireframing", "Design Systems", "Accessibility"] },
-  { name: "Supply Chain Manager", baselineGrowth: 0.8, automationRisk: 0.3, demandHotspots: ["China", "United States", "Vietnam", "Mexico"], salaryBand: [70000, 150000], coreSkills: ["Logistics", "Procurement", "Forecasting", "Vendor Management", "Operations"] },
-  { name: "Cybersecurity Specialist", baselineGrowth: 0.92, automationRisk: 0.2, demandHotspots: ["United States", "Israel", "India", "United Kingdom"], salaryBand: [80000, 190000], coreSkills: ["Network Security", "Threat Modeling", "Incident Response", "Cloud Security", "Risk Management"] },
-  { name: "Doctor", baselineGrowth: 0.88, automationRisk: 0.12, demandHotspots: ["United States", "Germany", "Canada", "Australia"], salaryBand: [120000, 320000], coreSkills: ["Clinical Judgment", "Diagnosis", "Patient Care", "Research", "Emergency Response"] },
-  { name: "Lawyer", baselineGrowth: 0.68, automationRisk: 0.34, demandHotspots: ["United States", "United Kingdom", "Singapore", "Switzerland"], salaryBand: [70000, 240000], coreSkills: ["Legal Research", "Negotiation", "Writing", "Risk Management", "Client Advisory"] },
-  { name: "Product Manager", baselineGrowth: 0.79, automationRisk: 0.33, demandHotspots: ["United States", "Germany", "India", "Canada"], salaryBand: [85000, 210000], coreSkills: ["Product Strategy", "Roadmapping", "Stakeholder Management", "Analytics", "User Research"] },
-  { name: "Accountant", baselineGrowth: 0.65, automationRisk: 0.5, demandHotspots: ["United States", "Singapore", "United Kingdom", "Canada"], salaryBand: [48000, 120000], coreSkills: ["Accounting", "Tax Planning", "Excel", "Compliance", "Financial Modeling"] },
-  { name: "Sales Executive", baselineGrowth: 0.76, automationRisk: 0.28, demandHotspots: ["United States", "United Kingdom", "India", "Brazil"], salaryBand: [50000, 180000], coreSkills: ["Sales", "Negotiation", "CRM", "Prospecting", "Public Speaking"] },
-  { name: "Digital Marketer", baselineGrowth: 0.78, automationRisk: 0.43, demandHotspots: ["United States", "India", "United Kingdom", "Australia"], salaryBand: [45000, 135000], coreSkills: ["SEO", "Paid Ads", "Email Marketing", "Analytics", "Copywriting"] },
-  { name: "Construction Manager", baselineGrowth: 0.81, automationRisk: 0.18, demandHotspots: ["United States", "Saudi Arabia", "Australia", "Canada"], salaryBand: [65000, 155000], coreSkills: ["Project Management", "Safety Compliance", "Budgeting", "Vendor Management", "Leadership"] },
-  { name: "Graphic Designer", baselineGrowth: 0.62, automationRisk: 0.48, demandHotspots: ["United States", "India", "United Kingdom", "Canada"], salaryBand: [38000, 105000], coreSkills: ["Adobe Creative Suite", "Branding", "Typography", "Visual Storytelling", "Client Communication"] },
-  { name: "Financial Advisor", baselineGrowth: 0.75, automationRisk: 0.28, demandHotspots: ["United States", "Switzerland", "Singapore", "United Arab Emirates"], salaryBand: [60000, 180000], coreSkills: ["Financial Planning", "Risk Management", "Client Advisory", "Sales", "Compliance"] },
-  { name: "Logistics Coordinator", baselineGrowth: 0.73, automationRisk: 0.37, demandHotspots: ["United States", "China", "Mexico", "Netherlands"], salaryBand: [42000, 95000], coreSkills: ["Logistics", "Inventory Management", "Vendor Management", "Excel", "Operations"] }
+const metrics = [
+  { value: "20+", label: "hours saved weekly", detail: "Admin, reporting, and follow-up removed from the team calendar." },
+  { value: "43%", label: "faster response time", detail: "Leads and support requests answered before competitors react." },
+  { value: "3x", label: "lead follow-up speed", detail: "Every inquiry gets routed, tagged, and chased automatically." },
+  { value: "14 days", label: "typical first launch", detail: "Start with one workflow that pays back quickly." }
 ];
 
-const skillCategories: SkillCategory[] = [
-  { name: "AI, Automation & Data", items: ["AI Automation", "AI Tooling", "AI Agents", "Prompt Engineering", "AI Prompting", "Machine Learning", "Data Literacy", "SQL", "Python", "Data Visualization", "Business Intelligence", "Statistics", "Workflow Automation", "No-Code Automation", "API Integration", "RPA", "Chatbot Design", "Model Evaluation", "Data Cleaning", "Analytics"] },
-  { name: "Technology & Product", items: ["JavaScript", "TypeScript", "React", "Cloud Computing", "Cloud Security", "System Design", "Testing", "DevOps", "Cybersecurity", "Network Security", "Incident Response", "Threat Modeling", "Product Strategy", "Roadmapping", "User Research", "Figma", "Wireframing", "Design Systems", "Accessibility", "Technical Writing"] },
-  { name: "Business, Marketing & Creator", items: ["Sales", "Negotiation", "Client Acquisition", "CRM", "Paid Ads", "SEO", "Email Marketing", "Content Strategy", "Copywriting", "Short-Form Video", "Community Management", "Analytics", "Branding", "Agency Operations", "SMMA Operations", "Influencer Marketing", "Public Relations", "Market Research", "Customer Success", "Customer Service"] },
-  { name: "Leadership, Operations & Finance", items: ["Leadership", "Project Management", "Operations", "Vendor Management", "Procurement", "Logistics", "Inventory Management", "Forecasting", "Budgeting", "Financial Modeling", "Accounting", "Tax Planning", "Compliance", "Risk Management", "Stakeholder Management", "Team Scheduling", "Quality Control", "Process Improvement", "Strategic Planning", "Hiring"] },
-  { name: "Healthcare, Fitness & Human Care", items: ["Patient Care", "Clinical Judgment", "Medication Administration", "Diagnosis", "Emergency Response", "Empathy", "Care Planning", "Strength Training", "Nutrition Coaching", "Injury Prevention", "Client Motivation", "Mobility Training", "First Aid", "Mental Health Awareness", "Coaching", "Mentoring", "Classroom Management", "Curriculum Design", "Assessment", "Public Speaking"] },
-  { name: "Trades, Physical & Hospitality", items: ["Electrical Systems", "Plumbing", "Carpentry", "Welding", "HVAC", "Blueprint Reading", "Troubleshooting", "Safety Compliance", "Equipment Maintenance", "Food Safety", "Hospitality Operations", "Restaurant Operations", "Event Planning", "Barista Skills", "Cooking", "Driving", "Warehouse Operations", "Manual Dexterity", "Physical Stamina", "On-Site Problem Solving"] },
-  { name: "Transferable Soft Skills", items: ["Communication", "Problem Solving", "Critical Thinking", "Adaptability", "Time Management", "Creativity", "Writing", "Language Fluency", "Research", "Attention to Detail", "Conflict Resolution", "Emotional Intelligence", "Decision Making", "Presentation Skills", "Remote Collaboration", "Learning Agility", "Personal Branding", "Networking", "Resilience", "Ethical Judgment"] }
+const pains = [
+  "Leads sit in inboxes until they go cold.",
+  "Your best people waste hours copying data between tools.",
+  "Customers wait because support is buried in repetitive questions.",
+  "Reports are built manually after decisions should already be made.",
+  "Growth creates more admin instead of more profit."
 ];
 
-const defaultSkills = Array.from(new Set(skillCategories.flatMap((category) => category.items)));
-const futurePlans = ["Move abroad", "Switch careers", "Upskill in AI", "Start a business", "Take management track", "Freelance/Consulting", "Remote-first lifestyle", "Build a personal brand", "Open a local service business"];
-const universalUpskills = ["AI Automation", "AI Tooling", "Prompt Engineering", "Data Literacy", "Sales", "Personal Branding", "Communication", "Project Management", "Financial Planning", "Remote Collaboration"];
+const automations = [
+  { title: "Lead follow-up", copy: "Instant replies, qualification questions, reminders, and handoff to sales before the buyer loses interest." },
+  { title: "CRM updates", copy: "Contacts, notes, deal stages, tags, and next steps updated without manual data entry." },
+  { title: "Appointment booking", copy: "Scheduling, confirmations, reminders, reschedules, and no-show recovery handled automatically." },
+  { title: "Customer support", copy: "Answer common questions, escalate urgent issues, and keep customers informed without drowning your team." },
+  { title: "Invoicing", copy: "Create invoices, send payment reminders, flag overdue accounts, and sync records across your stack." },
+  { title: "Reporting", copy: "Daily or weekly KPI summaries delivered to your inbox so you see bottlenecks before they cost you." },
+  { title: "Social media workflows", copy: "Turn raw ideas into briefs, calendars, approvals, repurposed posts, and publishing checklists." }
+];
+
+const process = [
+  { step: "01", title: "Audit", copy: "We map the repetitive work, missed revenue points, and tools already inside your business." },
+  { step: "02", title: "Build", copy: "We create the highest-ROI automation first, then test it against real scenarios before launch." },
+  { step: "03", title: "Deploy", copy: "Your team gets a clean handoff, simple documentation, and support while the system goes live." }
+];
+
+const caseStudies = [
+  { company: "Local service company", result: "31% more booked calls", copy: "Automated quote follow-up, reminders, and CRM updates so every new inquiry received a response in under two minutes." },
+  { company: "B2B consulting firm", result: "18 hours saved weekly", copy: "Removed manual reporting and client status updates from the founder's week with a dashboard and email summary workflow." },
+  { company: "Ecommerce support team", result: "47% fewer repetitive tickets", copy: "Built a support triage system that answered common order questions and escalated urgent cases with context." }
+];
+
+const logos = ["Northstar Dental", "Brightline HVAC", "Urban Eats", "Peak Legal", "Atlas Fitness"];
+
+export const metadata = {
+  title: "AI Automation Systems for SMBs",
+  description: "AI automation systems that save time, reduce costs, and help small businesses scale faster."
+};
 
 export default function Page() {
-  const [role, setRole] = useState(careerPaths[0].name);
-  const [customRole, setCustomRole] = useState("");
-  const [location, setLocation] = useState("United States");
-  const [age, setAge] = useState(28);
-  const [experience, setExperience] = useState(5);
-  const [timeFrame, setTimeFrame] = useState(10);
-  const [ownedSkills, setOwnedSkills] = useState<string[]>(["Problem Solving", "Communication"]);
-  const [learningSkills, setLearningSkills] = useState<string[]>(["Cloud Computing", "AI Prompting"]);
-  const [plans, setPlans] = useState<string[]>(["Upskill in AI"]);
-  const [resultVisible, setResultVisible] = useState(false);
-  const [showRecommendations, setShowRecommendations] = useState(false);
-  const [customSkill, setCustomSkill] = useState("");
-  const [extraSkills, setExtraSkills] = useState<string[]>([]);
-
-  const allSkills = useMemo(() => Array.from(new Set([...defaultSkills, ...extraSkills])).sort(), [extraSkills]);
-  const selectedCareer = useMemo(() => careerPaths.find((p) => p.name === role) ?? careerPaths[0], [role]);
-  const displayedRole = customRole.trim() || selectedCareer.name;
-
-  const recommendedUpskills = useMemo(() => {
-    const recommendations = Array.from(new Set([...selectedCareer.coreSkills, ...universalUpskills]));
-    return recommendations.filter((skill) => !ownedSkills.includes(skill) && !learningSkills.includes(skill)).slice(0, 12);
-  }, [learningSkills, ownedSkills, selectedCareer.coreSkills]);
-
-  const calculateScores = useCallback((ownedCount: number, learningCount: number) => {
-    const skillCoverage = Math.min(ownedCount / 18, 1);
-    const learningBias = Math.min(learningCount / 14, 1);
-    const expFactor = Math.min(Math.max(experience, 1) / 15, 1);
-    const ageFactor = age < 30 ? 0.82 : age < 45 ? 1 : 0.9;
-    const locationBoost = selectedCareer.demandHotspots.includes(location) ? 1.08 : 0.95;
-    const ambitionFactor = plans.length > 0 ? 1.04 + Math.min(plans.length * 0.01, 0.04) : 0.97;
-    const timeRisk = Math.max(0.78, 1 - timeFrame * 0.015);
-    const rawSecurity = selectedCareer.baselineGrowth * (1 - selectedCareer.automationRisk * 0.45) * (0.42 + skillCoverage * 0.36 + learningBias * 0.22) * expFactor * ageFactor * locationBoost * ambitionFactor * timeRisk;
-    const jobSecurity = Math.max(6, Math.min(99, Math.round(rawSecurity * 140)));
-    const avgSalary = (selectedCareer.salaryBand[0] + selectedCareer.salaryBand[1]) / 2;
-    const annualSavings = avgSalary * 0.22;
-    const retirementGoal = 1200000;
-    const yearsToRetire = Math.max(3, Math.round(retirementGoal / Math.max(annualSavings, 1) - experience * 0.35));
-
-    return { jobSecurity, yearsToRetire, avgSalary };
-  }, [age, experience, location, plans.length, selectedCareer, timeFrame]);
-
-  const scores = useMemo(() => calculateScores(ownedSkills.length, learningSkills.length), [calculateScores, learningSkills.length, ownedSkills.length]);
-  const improvedScores = useMemo(() => calculateScores(ownedSkills.length, learningSkills.length + recommendedUpskills.length), [calculateScores, learningSkills.length, ownedSkills.length, recommendedUpskills.length]);
-
-  const toggle = (value: string, list: string[], setter: (next: string[]) => void) => {
-    setter(list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
-  };
-
-  const addCustomSkill = () => {
-    const normalizedSkill = customSkill.trim();
-
-    if (!normalizedSkill || allSkills.includes(normalizedSkill)) {
-      setCustomSkill("");
-      return;
-    }
-
-    setExtraSkills((current) => [...current, normalizedSkill]);
-    setOwnedSkills((current) => [...current, normalizedSkill]);
-    setCustomSkill("");
-  };
-
-  const addAllRecommendations = () => {
-    setLearningSkills((current) => Array.from(new Set([...current, ...recommendedUpskills])));
-  };
-
   return (
-    <main className="mx-auto min-h-screen max-w-6xl p-6 md:p-10">
-      <div className="rounded-3xl bg-gradient-to-br from-slate-950 to-blue-950 p-8 text-white shadow-xl">
-        <p className="text-sm font-semibold uppercase tracking-[0.3em] text-blue-200">Global career risk simulator</p>
-        <h1 className="mt-3 text-3xl font-bold md:text-5xl">Career Security Forecast</h1>
-        <p className="mt-3 max-w-3xl text-slate-200">Estimate your job security and retirement timeline with a larger skill universe spanning AI automation, physical work, healthcare, creator businesses, management, trades, hospitality, and soft skills.</p>
+    <main className="min-h-screen overflow-hidden bg-[#05060a] text-white">
+      <div className="pointer-events-none fixed inset-0 opacity-70" aria-hidden="true">
+        <div className="absolute left-1/2 top-0 h-96 w-96 -translate-x-1/2 rounded-full bg-cyan-500/20 blur-3xl" />
+        <div className="absolute right-0 top-1/3 h-96 w-96 rounded-full bg-violet-600/20 blur-3xl" />
+        <div className="absolute bottom-0 left-0 h-96 w-96 rounded-full bg-emerald-500/10 blur-3xl" />
       </div>
 
-      <section className="mt-8 grid gap-6 rounded-2xl bg-white p-6 shadow-sm md:grid-cols-2">
-        <label className="grid gap-2">
-          <span className="font-medium">Current Job Role</span>
-          <select value={role} onChange={(e) => setRole(e.target.value)} className="rounded-lg border border-slate-300 p-2">
-            {careerPaths.map((path) => <option key={path.name}>{path.name}</option>)}
-          </select>
-        </label>
+      <header className="relative z-10 mx-auto flex max-w-7xl items-center justify-between px-5 py-5 sm:px-8 lg:px-10">
+        <a href="#top" className="flex items-center gap-3" aria-label="Automation agency home">
+          <span className="grid h-10 w-10 place-items-center rounded-2xl bg-white text-sm font-black text-slate-950 shadow-lg shadow-cyan-500/20">AI</span>
+          <span className="text-sm font-semibold uppercase tracking-[0.28em] text-slate-300">Ops Automations</span>
+        </a>
+        <nav className="hidden items-center gap-7 text-sm text-slate-300 md:flex" aria-label="Primary navigation">
+          <a className="transition hover:text-white" href="#automate">What we automate</a>
+          <a className="transition hover:text-white" href="#process">Process</a>
+          <a className="transition hover:text-white" href="#proof">Proof</a>
+        </nav>
+        <a href="#audit" className="hidden rounded-full bg-white px-5 py-3 text-sm font-bold text-slate-950 shadow-lg shadow-white/10 transition hover:-translate-y-0.5 hover:bg-cyan-100 md:inline-flex">Book Free Audit</a>
+      </header>
 
-        <label className="grid gap-2">
-          <span className="font-medium">Custom role, if missing</span>
-          <input value={customRole} onChange={(e) => setCustomRole(e.target.value)} placeholder="e.g. Tattoo artist, farmer, pilot, founder" className="rounded-lg border border-slate-300 p-2" />
-        </label>
-
-        <label className="grid gap-2">
-          <span className="font-medium">Location (Country)</span>
-          <input value={location} onChange={(e) => setLocation(e.target.value)} className="rounded-lg border border-slate-300 p-2" />
-        </label>
-
-        <label className="grid gap-2">
-          <span className="font-medium">Age</span>
-          <input type="number" min={16} max={80} value={age} onChange={(e) => setAge(Number(e.target.value) || 16)} className="rounded-lg border border-slate-300 p-2" />
-        </label>
-
-        <label className="grid gap-2">
-          <span className="font-medium">Experience (Years)</span>
-          <input type="number" min={0} max={50} value={experience} onChange={(e) => setExperience(Number(e.target.value) || 0)} className="rounded-lg border border-slate-300 p-2" />
-        </label>
-
-        <label className="grid gap-2">
-          <span className="font-medium">Forecast Time Frame: {timeFrame} years</span>
-          <input type="range" min={1} max={30} value={timeFrame} onChange={(e) => setTimeFrame(Number(e.target.value))} />
-        </label>
-      </section>
-
-      <section className="mt-6 grid gap-6 rounded-2xl bg-white p-6 shadow-sm">
-        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-          <div>
-            <h2 className="text-xl font-semibold">Skills & Future Endeavors</h2>
-            <p className="mt-1 text-sm text-slate-600">Browse categorized skills or add any custom skill so the list can represent niche, local, technical, non-technical, micro, and macro abilities.</p>
+      <section id="top" className="relative z-10 mx-auto grid max-w-7xl gap-12 px-5 pb-20 pt-8 sm:px-8 lg:grid-cols-[1.05fr_0.95fr] lg:px-10 lg:pb-28 lg:pt-16">
+        <div className="flex flex-col justify-center">
+          <div className="mb-6 inline-flex w-fit items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-cyan-100 backdrop-blur">
+            <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_18px_rgba(52,211,153,0.9)]" />
+            AI automation systems for businesses that want to save time, reduce costs, and scale faster.
           </div>
-          <button onClick={() => setShowRecommendations(true)} className="rounded-xl bg-emerald-600 px-5 py-3 font-semibold text-white hover:bg-emerald-700">Increase Probability</button>
-        </div>
-
-        <div className="flex flex-col gap-3 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 md:flex-row">
-          <input value={customSkill} onChange={(e) => setCustomSkill(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addCustomSkill()} placeholder="Add any missing skill: AI automation, boxing, farming, restaurant ops..." className="flex-1 rounded-lg border border-slate-300 p-2" />
-          <button onClick={addCustomSkill} className="rounded-lg bg-slate-900 px-4 py-2 font-medium text-white">Add Custom Skill</button>
-        </div>
-
-        <div>
-          <p className="mb-2 font-medium">Skills you already have ({ownedSkills.length} selected)</p>
-          <div className="grid gap-4">
-            {skillCategories.map((category) => (
-              <div key={category.name}>
-                <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">{category.name}</h3>
-                <div className="flex flex-wrap gap-2">
-                  {category.items.map((skill) => (
-                    <button key={skill} onClick={() => toggle(skill, ownedSkills, setOwnedSkills)} className={`rounded-full border px-3 py-1 text-sm ${ownedSkills.includes(skill) ? "border-blue-600 bg-blue-50 text-blue-700" : "border-slate-300 hover:border-blue-300"}`}>
-                      {skill}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ))}
-            {extraSkills.length > 0 && (
-              <div>
-                <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">Your custom skills</h3>
-                <div className="flex flex-wrap gap-2">
-                  {extraSkills.map((skill) => (
-                    <button key={skill} onClick={() => toggle(skill, ownedSkills, setOwnedSkills)} className={`rounded-full border px-3 py-1 text-sm ${ownedSkills.includes(skill) ? "border-blue-600 bg-blue-50 text-blue-700" : "border-slate-300 hover:border-blue-300"}`}>
-                      {skill}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+          <h1 className="max-w-4xl text-5xl font-black leading-[0.95] tracking-tight text-white sm:text-6xl lg:text-7xl">
+            Replace Hours of Manual Work With Automations That Protect Your Profit.
+          </h1>
+          <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300 sm:text-xl">
+            We build practical automation systems for small and medium businesses drowning in admin, slow follow-up, support overload, and messy workflows—so your team can move faster without hiring more people.
+          </p>
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <a href="#audit" className="rounded-full bg-cyan-300 px-7 py-4 text-center text-base font-black text-slate-950 shadow-2xl shadow-cyan-400/25 transition hover:-translate-y-1 hover:bg-white focus:outline-none focus:ring-4 focus:ring-cyan-300/40">Book Free Automation Audit</a>
+            <a href="#automate" className="rounded-full border border-white/15 bg-white/5 px-7 py-4 text-center text-base font-bold text-white backdrop-blur transition hover:-translate-y-1 hover:border-cyan-300/60 hover:bg-white/10 focus:outline-none focus:ring-4 focus:ring-white/20">See What Can Be Automated</a>
+          </div>
+          <div className="mt-8 grid max-w-2xl grid-cols-3 gap-3 text-sm text-slate-300">
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4"><strong className="block text-lg text-white">No bloated project</strong>Launch one ROI workflow first.</div>
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4"><strong className="block text-lg text-white">No tool chaos</strong>Works with your current stack.</div>
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4"><strong className="block text-lg text-white">No mystery</strong>Clear scope, timeline, and handoff.</div>
           </div>
         </div>
 
-        <div>
-          <p className="mb-2 font-medium">Skills you are ready to learn ({learningSkills.length} selected)</p>
-          <div className="flex max-h-64 flex-wrap gap-2 overflow-y-auto rounded-2xl border border-slate-200 p-3">
-            {allSkills.map((skill) => (
-              <button key={`learn-${skill}`} onClick={() => toggle(skill, learningSkills, setLearningSkills)} className={`rounded-full border px-3 py-1 text-sm ${learningSkills.includes(skill) ? "border-emerald-600 bg-emerald-50 text-emerald-700" : "border-slate-300 hover:border-emerald-300"}`}>
-                {skill}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {showRecommendations && (
-          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
-            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-emerald-950">Recommended upskills for {displayedRole}</h3>
-                <p className="text-sm text-emerald-800">Add these to your learning plan to raise the forecast from {scores.jobSecurity}% to a potential {improvedScores.jobSecurity}%.</p>
+        <div className="relative min-h-[620px] lg:min-h-[680px]">
+          <div className="absolute left-0 top-0 z-20 w-48 rounded-[2rem] border border-white/15 bg-white/10 p-3 shadow-2xl shadow-black/30 backdrop-blur-xl sm:w-56">
+            <div className="aspect-[4/5] rounded-[1.45rem] border border-white/10 bg-gradient-to-br from-slate-700 to-slate-950 p-4">
+              <div className="h-full rounded-[1.1rem] border border-dashed border-white/20 bg-black/20 p-4 text-center">
+                <div className="mx-auto mt-8 h-20 w-20 rounded-full bg-gradient-to-br from-cyan-200 to-violet-300" />
+                <p className="mt-5 text-sm font-bold">Founder video</p>
+                <p className="mt-2 text-xs leading-5 text-slate-300">60 seconds: where your time is leaking and what to automate first.</p>
               </div>
-              <button onClick={addAllRecommendations} className="rounded-lg bg-emerald-700 px-4 py-2 font-medium text-white hover:bg-emerald-800">Add all to learning</button>
-            </div>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {recommendedUpskills.length > 0 ? recommendedUpskills.map((skill) => (
-                <button key={`recommended-${skill}`} onClick={() => toggle(skill, learningSkills, setLearningSkills)} className="rounded-full border border-emerald-500 bg-white px-3 py-1 text-sm font-medium text-emerald-800 hover:bg-emerald-100">
-                  + {skill}
-                </button>
-              )) : <p className="text-sm text-emerald-800">You already selected the strongest recommended upskills for this role.</p>}
             </div>
           </div>
-        )}
 
-        <div>
-          <p className="mb-2 font-medium">Future endeavors</p>
-          <div className="flex flex-wrap gap-2">
-            {futurePlans.map((plan) => (
-              <button key={plan} onClick={() => toggle(plan, plans, setPlans)} className={`rounded-full border px-3 py-1 text-sm ${plans.includes(plan) ? "border-violet-600 bg-violet-50 text-violet-700" : "border-slate-300 hover:border-violet-300"}`}>
-                {plan}
-              </button>
+          <div className="absolute right-0 top-16 w-[88%] rounded-[2.25rem] border border-white/15 bg-slate-950/80 p-4 shadow-2xl shadow-cyan-950/40 backdrop-blur-xl sm:p-5">
+            <div className="rounded-[1.75rem] border border-white/10 bg-gradient-to-br from-white/[0.09] to-white/[0.02] p-5">
+              <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                <div>
+                  <p className="text-sm font-bold text-white">Workflow Command Center</p>
+                  <p className="text-xs text-slate-400">Lead response automation</p>
+                </div>
+                <span className="rounded-full bg-emerald-400/15 px-3 py-1 text-xs font-bold text-emerald-300">Live</span>
+              </div>
+
+              <div className="mt-5 grid gap-3">
+                {["New website lead captured", "Qualification message sent", "CRM updated + deal created", "Calendar link delivered", "Sales owner notified"].map((item, index) => (
+                  <div key={item} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black/20 p-3">
+                    <span className="grid h-8 w-8 place-items-center rounded-full bg-cyan-300 text-xs font-black text-slate-950">{index + 1}</span>
+                    <span className="text-sm text-slate-200">{item}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-5 grid grid-cols-2 gap-3">
+                <div className="rounded-2xl bg-cyan-300 p-4 text-slate-950">
+                  <p className="text-3xl font-black">1.7m</p>
+                  <p className="text-xs font-bold uppercase tracking-wider">Avg response</p>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <p className="text-3xl font-black">$8.4k</p>
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Pipeline recovered</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="absolute bottom-0 left-8 right-6 z-30 rounded-[2rem] border border-white/15 bg-white/10 p-5 shadow-2xl shadow-black/40 backdrop-blur-xl">
+            <p className="text-sm font-bold text-cyan-100">Manual work replaced this week</p>
+            <div className="mt-4 h-3 overflow-hidden rounded-full bg-white/10">
+              <div className="h-full w-[78%] rounded-full bg-gradient-to-r from-cyan-300 to-emerald-300" />
+            </div>
+            <div className="mt-4 flex items-end justify-between">
+              <p className="text-4xl font-black">22.5 hrs</p>
+              <p className="text-right text-sm text-slate-300">Admin, follow-up,<br />reporting, support</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="relative z-10 border-y border-white/10 bg-white/[0.03] py-8">
+        <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
+          <p className="text-center text-sm font-bold uppercase tracking-[0.24em] text-slate-500">Built for operators tired of duct-taped workflows</p>
+          <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-5">
+            {logos.map((logo) => (
+              <div key={logo} className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-4 text-center text-sm font-bold text-slate-300">{logo}</div>
+            ))}
+          </div>
+          <div className="mt-8 grid gap-4 md:grid-cols-4">
+            {metrics.map((metric) => (
+              <article key={metric.label} className="rounded-3xl border border-white/10 bg-slate-950/50 p-5 transition hover:-translate-y-1 hover:border-cyan-300/40">
+                <p className="text-4xl font-black text-white">{metric.value}</p>
+                <p className="mt-1 font-bold text-cyan-100">{metric.label}</p>
+                <p className="mt-3 text-sm leading-6 text-slate-400">{metric.detail}</p>
+              </article>
             ))}
           </div>
         </div>
-
-        <button onClick={() => setResultVisible(true)} className="mt-2 w-fit rounded-xl bg-slate-900 px-6 py-3 font-semibold text-white hover:bg-slate-700">Calculate</button>
       </section>
 
-      {resultVisible && (
-        <section className="mt-6 grid gap-4 rounded-2xl bg-slate-900 p-6 text-white shadow-sm md:grid-cols-3">
-          <article className="rounded-xl bg-white/10 p-4">
-            <p className="text-sm text-slate-300">Career Security Probability</p>
-            <p className="mt-2 text-4xl font-bold">{scores.jobSecurity}%</p>
-            <p className="mt-2 text-sm text-slate-200">Target confidence line: 99% benchmark</p>
-          </article>
-          <article className="rounded-xl bg-white/10 p-4">
-            <p className="text-sm text-slate-300">Estimated Retirement Horizon</p>
-            <p className="mt-2 text-4xl font-bold">{scores.yearsToRetire} yrs</p>
-            <p className="mt-2 text-sm text-slate-200">Based on role median income and savings assumptions</p>
-          </article>
-          <article className="rounded-xl bg-white/10 p-4">
-            <p className="text-sm text-slate-300">Estimated Median Income</p>
-            <p className="mt-2 text-4xl font-bold">${scores.avgSalary.toLocaleString()}</p>
-            <p className="mt-2 text-sm text-slate-200">Global blended estimate for selected role</p>
-          </article>
+      <section className="relative z-10 mx-auto grid max-w-7xl gap-10 px-5 py-20 sm:px-8 lg:grid-cols-[0.9fr_1.1fr] lg:px-10 lg:py-28">
+        <div>
+          <p className="text-sm font-bold uppercase tracking-[0.28em] text-cyan-300">The real problem</p>
+          <h2 className="mt-4 text-4xl font-black tracking-tight sm:text-5xl">Your team is not slow. Your systems are making them slow.</h2>
+          <p className="mt-5 text-lg leading-8 text-slate-300">Every manual handoff creates delay, mistakes, and lost money. The cost is not just time—it is leads that never book, customers who churn, and staff who burn out doing work software should handle.</p>
+        </div>
+        <div className="grid gap-3">
+          {pains.map((pain) => (
+            <div key={pain} className="rounded-3xl border border-red-300/10 bg-red-500/[0.06] p-5 text-lg font-semibold text-red-50 shadow-lg shadow-red-950/10">
+              {pain}
+            </div>
+          ))}
+        </div>
+      </section>
 
-          <button onClick={() => setShowRecommendations(true)} className="rounded-xl bg-emerald-500 px-5 py-3 font-semibold text-emerald-950 hover:bg-emerald-400 md:col-span-3">Increase Probability with recommended upskills</button>
-          <p className="md:col-span-3 text-xs text-slate-300">Demo estimator only. Not financial, immigration, legal, or employment advice. Use custom roles and custom skills when a local career or niche ability is missing from the starter dataset.</p>
-        </section>
-      )}
+      <section id="automate" className="relative z-10 bg-gradient-to-b from-transparent via-cyan-950/20 to-transparent py-20 sm:py-28">
+        <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
+          <div className="max-w-3xl">
+            <p className="text-sm font-bold uppercase tracking-[0.28em] text-cyan-300">What we automate</p>
+            <h2 className="mt-4 text-4xl font-black tracking-tight sm:text-5xl">Start with the workflows closest to revenue and wasted payroll.</h2>
+          </div>
+          <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {automations.map((automation) => (
+              <article key={automation.title} className="group rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 backdrop-blur transition duration-300 hover:-translate-y-2 hover:border-cyan-300/50 hover:bg-white/[0.07]">
+                <div className="mb-8 grid h-12 w-12 place-items-center rounded-2xl bg-cyan-300 text-xl font-black text-slate-950 transition group-hover:rotate-3 group-hover:scale-110">→</div>
+                <h3 className="text-2xl font-black">{automation.title}</h3>
+                <p className="mt-3 leading-7 text-slate-300">{automation.copy}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="process" className="relative z-10 mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:px-10 lg:py-28">
+        <div className="rounded-[2.5rem] border border-white/10 bg-white/[0.04] p-6 shadow-2xl shadow-black/20 backdrop-blur sm:p-10">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-2xl">
+              <p className="text-sm font-bold uppercase tracking-[0.28em] text-cyan-300">Simple process</p>
+              <h2 className="mt-4 text-4xl font-black tracking-tight sm:text-5xl">Automate one painful workflow first. Then scale what works.</h2>
+            </div>
+            <a href="#audit" className="rounded-full bg-white px-6 py-4 text-center font-black text-slate-950 transition hover:-translate-y-1 hover:bg-cyan-100">Start with an audit</a>
+          </div>
+          <div className="mt-10 grid gap-4 md:grid-cols-3">
+            {process.map((item) => (
+              <article key={item.step} className="rounded-[2rem] border border-white/10 bg-slate-950/70 p-6">
+                <p className="text-sm font-black text-cyan-300">{item.step}</p>
+                <h3 className="mt-4 text-2xl font-black">{item.title}</h3>
+                <p className="mt-3 leading-7 text-slate-300">{item.copy}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="proof" className="relative z-10 mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:px-10 lg:py-28">
+        <div className="max-w-3xl">
+          <p className="text-sm font-bold uppercase tracking-[0.28em] text-cyan-300">Proof examples</p>
+          <h2 className="mt-4 text-4xl font-black tracking-tight sm:text-5xl">Realistic systems. Measurable business impact.</h2>
+          <p className="mt-5 text-lg leading-8 text-slate-300">The goal is not to look innovative. The goal is to remove bottlenecks that cost money every week.</p>
+        </div>
+        <div className="mt-10 grid gap-4 lg:grid-cols-3">
+          {caseStudies.map((study) => (
+            <article key={study.company} className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 transition hover:-translate-y-2 hover:border-emerald-300/50">
+              <p className="text-sm font-bold uppercase tracking-[0.18em] text-slate-500">{study.company}</p>
+              <h3 className="mt-4 text-3xl font-black text-emerald-300">{study.result}</h3>
+              <p className="mt-4 leading-7 text-slate-300">{study.copy}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="relative z-10 mx-auto grid max-w-7xl gap-8 px-5 py-20 sm:px-8 lg:grid-cols-[0.8fr_1.2fr] lg:px-10 lg:py-28">
+        <div className="rounded-[2rem] border border-white/10 bg-white/[0.05] p-5 backdrop-blur">
+          <div className="aspect-[4/5] rounded-[1.5rem] border border-dashed border-white/20 bg-gradient-to-br from-cyan-300/30 via-violet-400/20 to-slate-950 p-6">
+            <div className="flex h-full flex-col justify-end rounded-[1.1rem] bg-black/20 p-5">
+              <p className="text-sm font-bold uppercase tracking-[0.22em] text-cyan-100">Founder image</p>
+              <p className="mt-2 text-2xl font-black">Replace the placeholder with a sharp founder portrait or short Loom video.</p>
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-col justify-center">
+          <p className="text-sm font-bold uppercase tracking-[0.28em] text-cyan-300">Founder-led build partner</p>
+          <h2 className="mt-4 text-4xl font-black tracking-tight sm:text-5xl">I build automation for owners who need fewer moving parts, not more dashboards.</h2>
+          <p className="mt-5 text-lg leading-8 text-slate-300">Most SMBs do not need another complicated platform. They need someone to find the repetitive work stealing margin, build a clean system around it, and make sure the team can actually use it.</p>
+          <p className="mt-5 text-lg leading-8 text-slate-300">My mission is simple: help good businesses stop losing money to slow follow-up, manual admin, and disconnected tools—then turn those saved hours into capacity for growth.</p>
+        </div>
+      </section>
+
+      <section id="audit" className="relative z-10 px-5 pb-28 pt-10 sm:px-8 lg:px-10">
+        <div className="mx-auto max-w-6xl overflow-hidden rounded-[2.5rem] border border-cyan-300/30 bg-cyan-300 p-8 text-slate-950 shadow-2xl shadow-cyan-500/25 sm:p-12 lg:p-16">
+          <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
+            <div>
+              <p className="text-sm font-black uppercase tracking-[0.24em] text-slate-700">Free automation audit</p>
+              <h2 className="mt-4 text-4xl font-black tracking-tight sm:text-6xl">Find the workflow costing you the most money this month.</h2>
+              <p className="mt-5 max-w-3xl text-lg font-medium leading-8 text-slate-800">In one call, we identify what should be automated first, estimate the time and cost savings, and outline the fastest path to launch. No vague strategy deck. Just a practical plan.</p>
+            </div>
+            <div className="rounded-[2rem] bg-slate-950 p-6 text-white shadow-2xl">
+              <p className="text-2xl font-black">What you get:</p>
+              <ul className="mt-5 space-y-4 text-slate-300">
+                <li className="flex gap-3"><span className="text-cyan-300">✓</span>Top 3 automation opportunities</li>
+                <li className="flex gap-3"><span className="text-cyan-300">✓</span>Estimated hours and cost savings</li>
+                <li className="flex gap-3"><span className="text-cyan-300">✓</span>Recommended first workflow to build</li>
+              </ul>
+              <a href="mailto:hello@example.com?subject=Free%20Automation%20Audit" className="mt-7 block rounded-full bg-cyan-300 px-6 py-4 text-center font-black text-slate-950 transition hover:-translate-y-1 hover:bg-white">Book Free Automation Audit</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-white/10 bg-slate-950/95 p-3 backdrop-blur md:hidden">
+        <a href="#audit" className="block rounded-full bg-cyan-300 px-5 py-4 text-center font-black text-slate-950 shadow-lg shadow-cyan-400/20">Book Free Automation Audit</a>
+      </div>
     </main>
   );
 }
