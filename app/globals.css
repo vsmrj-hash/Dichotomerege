@@ -3,13 +3,24 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: light;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
 }
 
 body {
-  @apply bg-slate-50 text-slate-900;
+  margin: 0;
+  background: #08090d;
+  color: #f8fafc;
 }
 
-textarea {
-  @apply min-h-40 w-full rounded-xl border border-slate-200 p-3 text-sm shadow-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20;
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+::selection {
+  background: rgba(125, 211, 252, 0.35);
 }
