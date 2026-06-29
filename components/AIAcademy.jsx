@@ -205,6 +205,20 @@ export default function AIAcademy() {
     ::-webkit-scrollbar{width:10px;height:10px}
     ::-webkit-scrollbar-thumb{background:rgba(124,92,255,.35);border-radius:99px}
     *:focus-visible{outline:2px solid ${ACCENT};outline-offset:2px;border-radius:8px}
+    .mobile-stack{display:grid;grid-template-columns:1fr;gap:14px}
+    @media(min-width:768px){.mobile-stack{grid-template-columns:1.6fr 1fr}}
+    .stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+    @media(min-width:640px){.stat-grid{grid-template-columns:repeat(4,1fr);gap:14px}}
+    .academy-grid{display:grid;grid-template-columns:1fr;gap:12px}
+    @media(min-width:480px){.academy-grid{grid-template-columns:repeat(2,1fr)}}
+    @media(min-width:768px){.academy-grid{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}}
+    .prompt-grid{display:grid;grid-template-columns:1fr;gap:12px}
+    @media(min-width:640px){.prompt-grid{grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}}
+    .continue-row{display:flex;flex-direction:column;gap:10px;align-items:stretch}
+    @media(min-width:640px){.continue-row{flex-direction:row;align-items:center;gap:16px}}
+    .continue-btn{align-self:flex-start}
+    .hero-buttons{display:flex;flex-direction:column;gap:10px;margin-top:22px}
+    @media(min-width:480px){.hero-buttons{flex-direction:row;gap:12px;margin-top:26px}}
   `;
 
   return (
@@ -298,10 +312,10 @@ export default function AIAcademy() {
           </div>
 
           {/* Mobile nav */}
-          <div className="flex md:hidden" style={{ position: "sticky", bottom: 0, borderTop: `1px solid ${t.border}`, background: t.glass, backdropFilter: "blur(14px)", padding: "8px 6px", justifyContent: "space-around", zIndex: 20 }}>
+          <div className="flex md:hidden" style={{ position: "sticky", bottom: 0, borderTop: `1px solid ${t.border}`, background: t.glass, backdropFilter: "blur(14px)", padding: "10px 6px env(safe-area-inset-bottom, 6px)", justifyContent: "space-around", zIndex: 20 }}>
             {nav.map((n) => (
-              <button key={n.id} onClick={() => setView(n.id)} className="flex" style={{ flexDirection: "column", alignItems: "center", gap: 3, background: "none", border: "none", color: view === n.id ? ACCENT : t.faint, fontSize: 10, padding: "4px 6px" }}>
-                <n.icon size={20} />
+              <button key={n.id} onClick={() => setView(n.id)} className="flex" style={{ flexDirection: "column", alignItems: "center", gap: 3, background: "none", border: "none", color: view === n.id ? ACCENT : t.faint, fontSize: 10, padding: "8px 10px", minWidth: 48, minHeight: 48 }}>
+                <n.icon size={22} />
                 {n.label.split(" ")[0]}
               </button>
             ))}
@@ -368,12 +382,12 @@ function HomeView({ t, setView, setActiveAcademy, done, xp, streak, level }) {
           <p style={{ fontSize: "clamp(15px,2vw,18px)", color: t.sub, marginTop: 18, maxWidth: 480 }}>
             Stop watching tutorials. Open a simulator, complete the mission, get it checked. Every lesson is a task you actually finish.
           </p>
-          <div className="flex" style={{ gap: 12, marginTop: 26, flexWrap: "wrap" }}>
-            <button onClick={() => setView("mission")} className="flex items-center gap-2 hover-rise"
+          <div className="hero-buttons">
+            <button onClick={() => setView("mission")} className="flex items-center justify-center gap-2 hover-rise"
               style={{ padding: "13px 22px", borderRadius: 14, background: GRAD, color: "#fff", border: "none", fontWeight: 700, fontSize: 15, cursor: "pointer", boxShadow: `0 12px 30px ${ACCENT}55` }}>
               <Play size={17} /> Start a live mission
             </button>
-            <button onClick={() => setView("academies")} className="flex items-center gap-2 hover-rise"
+            <button onClick={() => setView("academies")} className="flex items-center justify-center gap-2 hover-rise"
               style={{ padding: "13px 22px", borderRadius: 14, background: t.surfaceSolid, color: t.text, border: `1px solid ${t.borderStrong}`, fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
               Browse academies <ArrowRight size={16} />
             </button>
@@ -381,7 +395,7 @@ function HomeView({ t, setView, setActiveAcademy, done, xp, streak, level }) {
         </div>
       </section>
 
-      <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(160px,1fr))", gap: 14, marginBottom: 30 }}>
+      <div className="stat-grid" style={{ marginBottom: 30 }}>
         {[
           { label: "Day streak", value: streak, suffix: "days", icon: Flame, color: AMBER },
           { label: "Total XP", value: xp.toLocaleString(), icon: Zap, color: ACCENT },
@@ -396,24 +410,26 @@ function HomeView({ t, setView, setActiveAcademy, done, xp, streak, level }) {
         ))}
       </div>
 
-      <div className="grid" style={{ gridTemplateColumns: "1.6fr 1fr", gap: 16, marginBottom: 30 }}>
-        <div style={{ padding: 22, borderRadius: 20, background: t.surface, border: `1px solid ${t.border}` }}>
+      <div className="mobile-stack" style={{ marginBottom: 30 }}>
+        <div style={{ padding: "18px 16px", borderRadius: 20, background: t.surface, border: `1px solid ${t.border}` }}>
           <div style={{ fontSize: 13, color: t.faint, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em" }}>Continue learning</div>
-          <div className="flex items-center gap-4" style={{ marginTop: 16 }}>
-            <div style={{ position: "relative", display: "grid", placeItems: "center" }}>
-              <Ring value={62} track={t.border} />
-              <span style={{ position: "absolute", fontSize: 13, fontWeight: 800 }}>62%</span>
+          <div className="continue-row" style={{ marginTop: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, flex: 1, minWidth: 0 }}>
+              <div style={{ position: "relative", display: "grid", placeItems: "center", flexShrink: 0 }}>
+                <Ring value={62} track={t.border} />
+                <span style={{ position: "absolute", fontSize: 13, fontWeight: 800 }}>62%</span>
+              </div>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontWeight: 800, fontSize: 16, letterSpacing: "-0.02em" }}>Claude Academy · Projects</div>
+                <div style={{ fontSize: 13, color: t.sub, marginTop: 2 }}>Build a Project with knowledge & instructions.</div>
+              </div>
             </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 800, fontSize: 18, letterSpacing: "-0.02em" }}>Claude Academy · Projects</div>
-              <div style={{ fontSize: 14, color: t.sub, marginTop: 2 }}>Build a Project with knowledge & instructions.</div>
-            </div>
-            <button onClick={() => setView("mission")} className="hover-rise" style={{ padding: "10px 16px", borderRadius: 12, background: GRAD, color: "#fff", border: "none", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+            <button onClick={() => setView("mission")} className="hover-rise continue-btn" style={{ padding: "10px 16px", borderRadius: 12, background: GRAD, color: "#fff", border: "none", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" }}>
               Resume <ChevronRight size={16} />
             </button>
           </div>
         </div>
-        <div onClick={() => setView("mission")} className="hover-rise" style={{ cursor: "pointer", padding: 22, borderRadius: 20, border: `1px solid ${t.border}`, background: `linear-gradient(135deg, ${AMBER}22, transparent)` }}>
+        <div onClick={() => setView("mission")} className="hover-rise" style={{ cursor: "pointer", padding: "18px 16px", borderRadius: 20, border: `1px solid ${t.border}`, background: `linear-gradient(135deg, ${AMBER}22, transparent)` }}>
           <div className="flex items-center gap-2" style={{ fontSize: 13, color: AMBER, fontWeight: 800 }}><Flame size={15} /> Daily challenge</div>
           <div style={{ fontWeight: 800, fontSize: 18, marginTop: 12, letterSpacing: "-0.02em" }}>Ship a working MCP server</div>
           <div style={{ fontSize: 14, color: t.sub, marginTop: 4 }}>+150 XP · resets in 9h</div>
@@ -424,7 +440,7 @@ function HomeView({ t, setView, setActiveAcademy, done, xp, streak, level }) {
         <h2 style={{ fontSize: 20, fontWeight: 800, letterSpacing: "-0.02em", margin: 0 }}>Trending academies</h2>
         <button onClick={() => setView("academies")} style={{ background: "none", border: "none", color: ACCENT, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, fontSize: 14 }}>See all <ArrowRight size={15} /></button>
       </div>
-      <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill,minmax(220px,1fr))", gap: 14 }}>
+      <div className="academy-grid">
         {ACADEMIES.slice(0, 6).map((a) => (
           <AcademyCard key={a.id} a={a} t={t} onClick={() => { setActiveAcademy(a.id); setView("academies"); }} />
         ))}
@@ -789,7 +805,7 @@ function PromptsView({ t, fireToast }) {
         ))}
       </div>
 
-      <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: 14 }}>
+      <div className="prompt-grid">
         {list.map((p, i) => (
           <div key={i} className="hover-rise" style={{ padding: 18, borderRadius: 18, background: t.surface, border: `1px solid ${t.border}`, display: "flex", flexDirection: "column" }}>
             <div className="flex items-center justify-between" style={{ marginBottom: 10 }}>
@@ -826,7 +842,7 @@ function ProgressView({ t, xp, streak, level, done }) {
       <h1 style={{ fontSize: 30, fontWeight: 850, letterSpacing: "-0.03em", margin: "0 0 6px" }}>Your progress</h1>
       <p style={{ color: t.sub, margin: "0 0 22px" }}>Every mission you finish moves these.</p>
 
-      <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 14, marginBottom: 26 }}>
+      <div className="stat-grid" style={{ marginBottom: 26 }}>
         {[
           { l: "Current streak", v: `${streak} days`, i: Flame, c: AMBER },
           { l: "Total XP", v: xp.toLocaleString(), i: Zap, c: ACCENT },
@@ -841,14 +857,14 @@ function ProgressView({ t, xp, streak, level, done }) {
         ))}
       </div>
 
-      <div style={{ padding: 22, borderRadius: 20, background: t.surface, border: `1px solid ${t.border}`, marginBottom: 22, overflow: "hidden" }}>
+      <div style={{ padding: "18px 14px", borderRadius: 20, background: t.surface, border: `1px solid ${t.border}`, marginBottom: 22, overflow: "hidden" }}>
         <div style={{ fontWeight: 800, fontSize: 16, marginBottom: 14 }}>Learning heatmap</div>
-        <div style={{ display: "grid", gridTemplateColumns: `repeat(${weeks}, 1fr)`, gap: 4 }}>
+        <div style={{ display: "grid", gridTemplateColumns: `repeat(${weeks}, 1fr)`, gap: 3, overflowX: "auto" }}>
           {Array.from({ length: weeks }).map((_, w) => (
             <div key={w} style={{ display: "grid", gridTemplateRows: `repeat(${days},1fr)`, gap: 4 }}>
               {Array.from({ length: days }).map((_, d) => {
                 const v = cells[w * days + d];
-                return <div key={d} style={{ aspectRatio: "1", borderRadius: 4, background: levels[v], border: `1px solid ${t.border}` }} />;
+                return <div key={d} style={{ aspectRatio: "1", borderRadius: 3, background: levels[v], border: `1px solid ${t.border}`, minWidth: 8 }} />;
               })}
             </div>
           ))}
