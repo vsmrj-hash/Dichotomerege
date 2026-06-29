@@ -2,8 +2,8 @@ import './globals.css';
 import { ReactNode } from 'react';
 
 export const metadata = {
-  title: 'AI Resume Optimizer',
-  description: 'Optimize resumes against job descriptions with OCR, AI rewrite, and deterministic scoring.'
+  title: 'AI Academy — Master every AI tool through real work',
+  description: 'Interactive learning platform with simulators, missions, and prompt libraries for Claude, ChatGPT, Gemini, and more.'
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
