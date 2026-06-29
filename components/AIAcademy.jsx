@@ -5,7 +5,8 @@ import {
   Home, GraduationCap, Sparkles, Library, Trophy, Search, Command,
   Flame, Zap, Check, ChevronRight, Lock, Play, Copy, Star,
   Sun, Moon, ArrowRight, X, CircleCheck, Wand2, Terminal, Image as ImageIcon,
-  Video, Boxes, Code2, Layers, Cpu, Rocket, Brain, Heart, Filter
+  Video, Boxes, Code2, Layers, Cpu, Rocket, Brain, Heart, Filter,
+  CreditCard, Crown, BadgeCheck, Shield
 } from "lucide-react";
 
 const TOKENS = {
@@ -178,6 +179,7 @@ export default function AIAcademy() {
     { id: "mission", label: "Live Mission", icon: Rocket },
     { id: "prompts", label: "Prompt Library", icon: Library },
     { id: "progress", label: "Progress", icon: Trophy },
+    { id: "pricing", label: "Pricing", icon: CreditCard },
   ];
 
   const paletteItems = useMemo(() => {
@@ -219,6 +221,8 @@ export default function AIAcademy() {
     .continue-btn{align-self:flex-start}
     .hero-buttons{display:flex;flex-direction:column;gap:10px;margin-top:22px}
     @media(min-width:480px){.hero-buttons{flex-direction:row;gap:12px;margin-top:26px}}
+    .pricing-grid{grid-template-columns:1fr}
+    @media(min-width:640px){.pricing-grid{grid-template-columns:repeat(3,1fr)}}
   `;
 
   return (
@@ -309,6 +313,7 @@ export default function AIAcademy() {
             {view === "mission" && <MissionView t={t} award={award} fireToast={fireToast} done={done} />}
             {view === "prompts" && <PromptsView t={t} fireToast={fireToast} />}
             {view === "progress" && <ProgressView t={t} xp={xp} streak={streak} level={level} done={done} />}
+            {view === "pricing" && <PricingView t={t} fireToast={fireToast} />}
           </div>
 
           {/* Mobile nav */}
@@ -888,6 +893,300 @@ function ProgressView({ t, xp, streak, level, done }) {
               </div>
             </div>
           ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------- PRICING + RAZORPAY ---------------- */
+const PLANS = [
+  {
+    id: "free",
+    name: "Free",
+    price: 0,
+    priceLabel: "₹0",
+    period: "forever",
+    icon: Rocket,
+    color: "#10B981",
+    popular: false,
+    features: [
+      "3 academies (Claude, ChatGPT, Gemini)",
+      "5 missions per month",
+      "Basic prompt library",
+      "Community access",
+    ],
+    cta: "Get started",
+  },
+  {
+    id: "pro",
+    name: "Pro",
+    price: 49900,
+    priceLabel: "₹499",
+    period: "/month",
+    icon: Crown,
+    color: ACCENT,
+    popular: true,
+    features: [
+      "All 13 academies unlocked",
+      "Unlimited missions",
+      "Full prompt library + custom prompts",
+      "AI Coach (live hints)",
+      "Priority new content",
+      "Certificates & badges",
+    ],
+    cta: "Upgrade to Pro",
+  },
+  {
+    id: "teams",
+    name: "Teams",
+    price: 129900,
+    priceLabel: "₹1,299",
+    period: "/seat/month",
+    icon: Shield,
+    color: ACCENT2,
+    popular: false,
+    features: [
+      "Everything in Pro",
+      "Team dashboard & analytics",
+      "Custom onboarding paths",
+      "Admin seat management",
+      "SSO & invoicing",
+      "Dedicated support",
+    ],
+    cta: "Contact sales",
+  },
+];
+
+function loadRazorpayScript() {
+  return new Promise((resolve) => {
+    if (document.getElementById("razorpay-script")) {
+      resolve(true);
+      return;
+    }
+    const script = document.createElement("script");
+    script.id = "razorpay-script";
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+}
+
+function PricingView({ t, fireToast }) {
+  const [loading, setLoading] = useState(null);
+  const [paid, setPaid] = useState(() => new Set());
+
+  const handlePayment = async (plan) => {
+    if (plan.price === 0) {
+      fireToast("You're on the Free plan — start learning!");
+      return;
+    }
+    if (plan.id === "teams") {
+      fireToast("Team plan — we'll reach out to set you up!");
+      return;
+    }
+
+    setLoading(plan.id);
+
+    const scriptLoaded = await loadRazorpayScript();
+    if (!scriptLoaded) {
+      fireToast("Failed to load Razorpay. Check your connection.");
+      setLoading(null);
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/razorpay/create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          planId: plan.id,
+          amount: plan.price,
+          currency: "INR",
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Failed to create order");
+      }
+
+      const { orderId, amount, currency } = await res.json();
+
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount,
+        currency,
+        name: "AI Academy",
+        description: `${plan.name} Plan`,
+        order_id: orderId,
+        handler: async (response) => {
+          try {
+            const verifyRes = await fetch("/api/razorpay/verify", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+              }),
+            });
+            const data = await verifyRes.json();
+            if (data.verified) {
+              setPaid((s) => new Set(s).add(plan.id));
+              fireToast(`${plan.name} plan activated! Welcome aboard.`);
+            } else {
+              fireToast("Payment verification failed. Contact support.");
+            }
+          } catch {
+            fireToast("Verification error. Your payment is safe — contact support.");
+          }
+        },
+        prefill: {
+          name: "",
+          email: "",
+        },
+        theme: {
+          color: ACCENT,
+        },
+        modal: {
+          ondismiss: () => setLoading(null),
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.on("payment.failed", (response) => {
+        fireToast(`Payment failed: ${response.error.description}`);
+      });
+      rzp.open();
+    } catch (err) {
+      fireToast(err.message || "Something went wrong. Try again.");
+    } finally {
+      setLoading(null);
+    }
+  };
+
+  return (
+    <div className="fade-up">
+      <div style={{ textAlign: "center", marginBottom: 32 }}>
+        <div className="flex items-center justify-center gap-2" style={{ fontSize: 12, fontWeight: 700, color: ACCENT2, marginBottom: 12 }}>
+          <span style={{ width: 7, height: 7, borderRadius: 99, background: ACCENT2, boxShadow: `0 0 12px ${ACCENT2}` }} />
+          Simple pricing
+        </div>
+        <h1 style={{ fontSize: "clamp(28px,5vw,42px)", fontWeight: 850, letterSpacing: "-0.035em", margin: "0 0 8px" }}>
+          Invest in your <span style={{ background: GRAD, WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" }}>AI skills</span>
+        </h1>
+        <p style={{ color: t.sub, fontSize: "clamp(14px,2vw,17px)", maxWidth: 480, margin: "0 auto" }}>
+          Start free. Upgrade when you&apos;re ready to unlock every academy, mission, and the AI Coach.
+        </p>
+      </div>
+
+      <div className="pricing-grid" style={{ display: "grid", gap: 16, maxWidth: 960, margin: "0 auto" }}>
+        {PLANS.map((plan) => {
+          const Icon = plan.icon;
+          const isPaid = paid.has(plan.id);
+          return (
+            <div
+              key={plan.id}
+              className="hover-rise"
+              style={{
+                position: "relative",
+                padding: "clamp(20px,4vw,28px)",
+                borderRadius: 22,
+                background: plan.popular
+                  ? `linear-gradient(135deg, ${ACCENT}18, ${ACCENT2}10, ${t.surface})`
+                  : t.surface,
+                border: `1px solid ${plan.popular ? ACCENT + "66" : t.border}`,
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
+              {plan.popular && (
+                <div style={{
+                  position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)",
+                  padding: "4px 14px", borderRadius: 99, background: GRAD,
+                  color: "#fff", fontSize: 11, fontWeight: 800, letterSpacing: ".04em",
+                  textTransform: "uppercase", whiteSpace: "nowrap",
+                }}>
+                  Most popular
+                </div>
+              )}
+
+              <div className="flex items-center gap-3" style={{ marginBottom: 16, marginTop: plan.popular ? 6 : 0 }}>
+                <div style={{
+                  width: 44, height: 44, borderRadius: 14,
+                  background: plan.color + "22",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  border: `1px solid ${plan.color}44`,
+                }}>
+                  <Icon size={22} color={plan.color} />
+                </div>
+                <div>
+                  <div style={{ fontWeight: 800, fontSize: 18 }}>{plan.name}</div>
+                </div>
+              </div>
+
+              <div className="flex items-baseline gap-1" style={{ marginBottom: 20 }}>
+                <span style={{ fontSize: 36, fontWeight: 850, letterSpacing: "-0.03em" }}>
+                  {plan.priceLabel}
+                </span>
+                <span style={{ fontSize: 14, color: t.sub, fontWeight: 600 }}>
+                  {plan.period}
+                </span>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, flex: 1, marginBottom: 22 }}>
+                {plan.features.map((f, i) => (
+                  <div key={i} className="flex items-start gap-3" style={{ fontSize: 14, color: t.sub }}>
+                    <Check size={16} color={plan.color} style={{ marginTop: 2, flexShrink: 0 }} />
+                    <span>{f}</span>
+                  </div>
+                ))}
+              </div>
+
+              <button
+                onClick={() => handlePayment(plan)}
+                disabled={loading === plan.id || isPaid}
+                className="hover-rise flex items-center justify-center gap-2"
+                style={{
+                  width: "100%",
+                  padding: "14px 20px",
+                  borderRadius: 14,
+                  border: plan.popular ? "none" : `1px solid ${t.borderStrong}`,
+                  background: isPaid
+                    ? "#10B981"
+                    : plan.popular
+                      ? GRAD
+                      : t.surfaceSolid,
+                  color: isPaid || plan.popular ? "#fff" : t.text,
+                  fontWeight: 800,
+                  fontSize: 15,
+                  cursor: loading === plan.id || isPaid ? "default" : "pointer",
+                  opacity: loading === plan.id ? 0.7 : 1,
+                }}
+              >
+                {isPaid ? (
+                  <><BadgeCheck size={18} /> Active</>
+                ) : loading === plan.id ? (
+                  "Processing..."
+                ) : (
+                  <>{plan.cta} <ArrowRight size={16} /></>
+                )}
+              </button>
+            </div>
+          );
+        })}
+      </div>
+
+      <div style={{
+        marginTop: 32, padding: "18px 20px", borderRadius: 16,
+        background: t.surface, border: `1px solid ${t.border}`,
+        textAlign: "center", maxWidth: 960, margin: "32px auto 0",
+      }}>
+        <div className="flex items-center justify-center gap-2" style={{ fontSize: 13, color: t.sub }}>
+          <Shield size={15} color={t.faint} />
+          Payments secured by Razorpay · 256-bit SSL · Instant activation
         </div>
       </div>
     </div>
